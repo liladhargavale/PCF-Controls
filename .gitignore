@@ -3,25 +3,25 @@
 # dependencies
 /node_modules
 
-# Ignore all 'generated' folders
-**/generated/
+# # Ignore all 'generated' folders
+# **/generated/
 
-# But allow this specific file from the generated folder
-!generated/ManifestTypes.d.ts
+# # But allow this specific file from the generated folder
+# !generated/ManifestTypes.d.ts
 
 # output directory
 /out
 
 # msbuild output directories
-/bin
+# /bin
 /obj
 
 # Ignore all bin/ and obj/ folders in all subdirectories
-bin/
+# bin/
 obj/
 
-# But allow files from MySolutionFolder/bin/Debug/
-!LookupMultiSelectSolution/bin/Debug/
+# # But allow files from MySolutionFolder/bin/Debug/
+# !LookupMultiSelectSolution/bin/Debug/
 
 
 # MSBuild Binary and Structured Log
