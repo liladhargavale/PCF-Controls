@@ -27,7 +27,7 @@
   -->
   
   <PropertyGroup>
-    <SolutionPackageType>Both</SolutionPackageType>
+    <SolutionPackageType>Managed</SolutionPackageType>
     <SolutionPackageEnableLocalization>false</SolutionPackageEnableLocalization>
   </PropertyGroup>
  

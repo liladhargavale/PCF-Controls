@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="LookupMultiSelect" constructor="LookupMultiSelect" version="9.3.0" display-name-key="LookupMultiSelect_Control" description-key="LookupMultiSelect_Description" control-type="standard">
+  <control namespace="LookupMultiSelect" constructor="LookupMultiSelect" version="9.5.7" display-name-key="LookupMultiSelect_Control" description-key="LookupMultiSelect_Description" control-type="standard">
     <external-service-usage enabled="false"></external-service-usage>
       <property name="selectedItems" display-name-key="selectedItems" description-key="selectedItemsDescription" of-type="Lookup.Simple" required="true" usage="bound">
       </property>
@@ -8,7 +8,12 @@
       <property name="hiddenField" display-name-key="hiddenField" description-key="hiddenFieldDescription" of-type="Multiple" usage="bound" required="true">
       </property>
 
+      <property name="recordNamesField" display-name-key="recordNamesField" description-key="recordNamesFieldDescription" of-type="Multiple" usage="bound" required="false">
+      </property>
+
       <property name="LookupEntityLogicalName" display-name-key="lookupEntityLogicalName" description-key="selectedItemsDescription" of-type="SingleLine.Text" required="true" usage="input"></property>
+
+      <property name="LookupEntityDisplayName" display-name-key="lookupEntityDisplayName" description-key="Display name of the lookup entity" of-type="SingleLine.Text" required="false" usage="input"></property>
 
       <property name="NameFieldLogicalName" display-name-key="NameFieldLogicalName" description-key="selectedItemsDescription" of-type="SingleLine.Text" required="true" usage="input">
       </property>

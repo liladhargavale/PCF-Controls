@@ -1,28 +1,23 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 
-# # Ignore all 'generated' folders
-# **/generated/
-
-# # But allow this specific file from the generated folder
-# !generated/ManifestTypes.d.ts
-
-# output directory
+# Output directories
 /out
-
-# msbuild output directories
-# /bin
+/bin
 /obj
 
+# MSBuild output directories
+*.binlog
+
+# Ignore all 'generated' folders except specific files
+**/generated/
+!generated/ManifestTypes.d.ts
+
 # Ignore all bin/ and obj/ folders in all subdirectories
-# bin/
+bin/
 obj/
 
-# # But allow files from MySolutionFolder/bin/Debug/
-# !LookupMultiSelectSolution/bin/Debug/
-
-
-# MSBuild Binary and Structured Log
-*.binlog
+# Allow specific files from MySolutionFolder/bin/Debug/
+!LookupMultiSelectSolution/bin/Debug/

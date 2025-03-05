@@ -14,7 +14,15 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
     private subTextField2: string | "";
     private _selectedItemsContainer: HTMLDivElement; // Container for selected items
     private _dropdownScrollTop: number = 0; // To maintain scroll position
+    // newly added for button
+    private _lookupEntityLogicalName: string;
+    private _nameFieldLogicalName: string;
+     private _lookupEntityDisplayName: string;
+     private _newButton: HTMLButtonElement;
 
+      // New property for NamesField
+    private _namesFieldValue: string = "";
+    
     constructor() {
         // Initialize variables if needed
     }
@@ -25,78 +33,180 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
         state: ComponentFramework.Dictionary,
         container: HTMLDivElement
     ): void {
+        // Existing initialization code
         this._container = container;
         this._notifyOutputChanged = notifyOutputChanged;
-
-        // Initialize selected items from the hidden field values
+        this._lookupEntityDisplayName = context.parameters.LookupEntityDisplayName.raw || "Record";
+        this._lookupEntityLogicalName = context.parameters.LookupEntityLogicalName.raw || "";
+        this._nameFieldLogicalName = context.parameters.NameFieldLogicalName.raw || "";
+        
+        // Initialize selected items
         const hiddenFieldValues = JSON.parse(context.parameters.hiddenField.raw || "[]");
         this._selectedItems = hiddenFieldValues;
+        this.updateNamesField();
 
-        // Optional fields for email and mobile
+        // Optional fields
         this.subTextField1 = context.parameters.LookupOption1LogicalName?.raw || "";
         this.subTextField2 = context.parameters.LookupOption2LogicalName?.raw || "";
 
-        // Create the main field for displaying selected items and toggle button
+        // Create main UI elements
+        this.createMainField();        
+        // Load data and initialize
+        this.loadItems(context);
+        this.injectCSS();
+        this.updateView();
+    }
+
+    private createMainField(): void {
         this._mainField = document.createElement("div");
         this._mainField.className = "main-field";
 
-        // Create the container for selected items
+        // Create New button
+        this._newButton = document.createElement("button");
+        this._newButton.className = "new-entity-button";
+        this._newButton.textContent = `New ${this._lookupEntityDisplayName}`;
+        this._newButton.addEventListener("click", this.openNewForm.bind(this));
+
+        // Selected items container
         this._selectedItemsContainer = document.createElement("div");
         this._selectedItemsContainer.className = "selected-items-container";
 
-        // Create the search input field container
+        // Search input container
         this._searchInputContainer = document.createElement("div");
         this._searchInputContainer.className = "search-input-container";
 
-        // Create the search input field
+        // Search elements
         this._searchInput = document.createElement("input");
         this._searchInput.type = "text";
         this._searchInput.className = "search-input";
         this._searchInput.placeholder = "Search here";
-        // Debounced search to improve performance
         this._searchInput.addEventListener("input", this.debounce(this.filterItems.bind(this), 300));
 
-        // Create the search icon
         this._searchIcon = document.createElement("i");
         this._searchIcon.className = "fas fa-search search-icon";
         this._searchIcon.addEventListener("click", this.toggleDropdown.bind(this));
 
-        // Append search input and icon to the container
-        this._searchInputContainer.appendChild(this._searchInput);
-        this._searchInputContainer.appendChild(this._searchIcon);
-
-        // Create the dropdown container for checkboxes
+        // Dropdown container
         this._dropdownContainer = document.createElement("div");
         this._dropdownContainer.className = "dropdown-container";
-        this._dropdownContainer.style.display = "none"; // Hide by default
+        this._dropdownContainer.style.display = "none";
 
-        // Load items from the specified entity
-        this.loadItems(context);
-
-        // Append the selected items container, search input container, and dropdown to the main field
+        // Assemble components
+        this._searchInputContainer.appendChild(this._searchInput);
+        this._searchInputContainer.appendChild(this._searchIcon);
+        
         this._mainField.appendChild(this._selectedItemsContainer);
+        this._mainField.appendChild(this._newButton);
         this._mainField.appendChild(this._searchInputContainer);
         this._mainField.appendChild(this._dropdownContainer);
-
-        // Append the main field to the container
         this._container.appendChild(this._mainField);
-
-        // Inject CSS styles
-        this.injectCSS();
-
-        // Initial view update
-        this.updateView(context);
     }
 
-    /**
-     * Creates a debounced version of the provided function.
-     * The debounced function delays invoking the function until after
-     * wait milliseconds have elapsed since the last time it was invoked.
-     *
-     * @param func - The function to debounce.
-     * @param wait - The number of milliseconds to delay.
-     * @returns A new debounced function.
-     */
+
+    private retrieveData(entityLogicalName: string, fieldLogicalName: string, filter?: string): void {
+        const selectFields = `${fieldLogicalName},${entityLogicalName}id${this.subTextField1 ? `,${this.subTextField1}` : ""}${this.subTextField2 ? `,${this.subTextField2}` : ""}`;
+    let query = `?$select=${selectFields}`;
+
+    // Always filter active records (statecode eq 0)
+    const filterConditions: string[] = ["statecode eq 0"];
+    if (filter) {
+        filterConditions.push(filter);
+    }
+
+    query += `&$filter=${encodeURIComponent(filterConditions.join(" and "))}`;
+
+        Xrm.WebApi.retrieveMultipleRecords(entityLogicalName, query).then(
+            (result: any) => {
+                const lookupData: ComponentFramework.LookupValue[] = result.entities.map((entity: any) => ({
+                    id: entity[`${entityLogicalName}id`],
+                    entityType: entityLogicalName,
+                    name: entity[fieldLogicalName],
+                    subText1: this.subTextField1 ? entity[this.subTextField1] : "",
+                    subText2: this.subTextField2 ? entity[this.subTextField2] : ""
+                }));
+                
+                this.populateDropdown(lookupData);
+                this.syncCheckboxes();
+            },
+            (error: any) => {
+                console.error("API Error:", error.message);
+                //this.showErrorMessage("Error retrieving records");
+            }
+        );
+    }
+
+    // New method to update NamesField
+    private updateNamesField(): void {
+        this._namesFieldValue = this._selectedItems.map(item => item.name).join(", ");
+        this._notifyOutputChanged(); // Notify framework to update outputs
+    }
+
+    // Example method to add a new item (for reference)
+    private addItem(item: ComponentFramework.LookupValue): void {
+        if (!this._selectedItems.some(i => i.id === item.id)) {
+            this._selectedItems.push(item);
+            this.updateNamesField(); // Update NamesField when item is added
+            this._notifyOutputChanged();
+        }
+    }
+
+    // Example method to remove an item (for reference)
+    private removeItem(item: ComponentFramework.LookupValue): void {
+        this._selectedItems = this._selectedItems.filter(i => i.id !== item.id);
+        this.updateNamesField(); // Update NamesField when item is removed
+        this._notifyOutputChanged();
+    }
+
+    private openNewForm(): void {
+        const formOptions = {
+            entityName: this._lookupEntityLogicalName,
+            useQuickCreateForm: true
+        };
+    
+        Xrm.Navigation.openForm(formOptions).then(
+            (result: any) => {
+                // Check if the result contains the saved entity reference
+                if (result && result.savedEntityReference && result.savedEntityReference.length > 0) {
+                    const newRecordId = result.savedEntityReference[0].id;
+                    this.retrieveSpecificRecord(newRecordId);
+                } else {
+                    console.log("No new record was created.");
+                }
+            },
+            (error: any) => {
+                console.error("Error opening form:", error);
+            }
+        );
+    }
+
+    private retrieveSpecificRecord(recordId: string): void {
+        const selectFields = `${this._nameFieldLogicalName},${this._lookupEntityLogicalName}id${this.subTextField1 ? `,${this.subTextField1}` : ""}${this.subTextField2 ? `,${this.subTextField2}` : ""}`;
+        const query = `?$select=${selectFields}&$filter=${this._lookupEntityLogicalName}id eq ${recordId}`;
+    
+        Xrm.WebApi.retrieveRecord(this._lookupEntityLogicalName, recordId, query).then(
+            (newRecord: any) => {
+                const lookupValue: ComponentFramework.LookupValue = {
+                    id: newRecord[`${this._lookupEntityLogicalName}id`],
+                    entityType: this._lookupEntityLogicalName,
+                    name: newRecord[this._nameFieldLogicalName],
+                    subText1: this.subTextField1 ? newRecord[this.subTextField1] : "",
+                    subText2: this.subTextField2 ? newRecord[this.subTextField2] : ""
+                };
+    
+                if (!this._selectedItems.some(item => item.id === lookupValue.id)) {
+                    this._selectedItems.push(lookupValue);
+                    this._notifyOutputChanged();
+                    // Refresh dropdown data to include the new record
+                    this.retrieveData(this._lookupEntityLogicalName, this._nameFieldLogicalName); 
+                    this.updateView();
+                }
+            },
+            (error: any) => {
+                console.error("Error retrieving new record:", error);
+            }
+        );
+    }
+
     private debounce<T extends (...args: any[]) => void>(func: T, wait: number): (...args: Parameters<T>) => void {
         let timeout: number | undefined;
         return (...args: Parameters<T>) => {
@@ -121,40 +231,6 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
         // Fetch data dynamically from the CRM
         this.retrieveData(lookupEntityLogicalName, NameFieldLogicalName);
         this.syncCheckboxes();
-    }
-
-    private retrieveData(entityLogicalName: string, fieldLogicalName: string): void {
-        let selectFields = fieldLogicalName + "," + entityLogicalName + "id";
-        if (this.subTextField1) {
-            selectFields += "," + this.subTextField1;
-        }
-        if (this.subTextField2) {
-            selectFields += "," + this.subTextField2;
-        }
-
-        Xrm.WebApi.retrieveMultipleRecords(entityLogicalName, "?$select=" + selectFields).then(
-            (result: any) => {
-                const lookupData: ComponentFramework.LookupValue[] = result.entities.map((entity: any) => {
-                    return {
-                        id: entity[entityLogicalName + "id"],
-                        entityType: entityLogicalName,
-                        name: entity[fieldLogicalName],
-                        subText1: this.subTextField1 ? entity[this.subTextField1] : "",
-                        subText2: this.subTextField2 ? entity[this.subTextField2] : ""
-                    };
-                });
-                console.log("Lookup Data:", lookupData);
-                this.populateDropdown(lookupData);
-                this.syncCheckboxes(); // Synchronize checkboxes with selected items
-            },
-            (error: any) => {
-                console.error("API Error:", error.message);
-                const errorDiv = document.createElement("div");
-                errorDiv.className = "error-message";
-                errorDiv.textContent = "Error occured while retrieving records, please try after some time";
-                this._container.appendChild(errorDiv);
-            }
-        );
     }
 
     private populateDropdown(lookupData: ComponentFramework.LookupValue[]): void {
@@ -221,7 +297,7 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
         // Implement virtualization if the list is very large
         // This is a placeholder; actual virtualization would require more complex implementation
         // Consider using libraries like Virtual Scroller for better performance
-    }    
+    } 
 
     private onCheckboxChange(event: Event, item: ComponentFramework.LookupValue): void {
         const checkbox = event.target as HTMLInputElement;
@@ -348,7 +424,7 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
         const index = this._selectedItems.findIndex(i => i.id === item.id);
         if (index !== -1) {
             this._selectedItems.splice(index, 1);
-
+            this.removeItem(item); // Remove item when cross icon is clicked
             const checkbox = this._dropdownContainer.querySelector(`#checkbox-${item.id}`) as HTMLInputElement;
             if (checkbox) {
                 checkbox.checked = false;
@@ -373,7 +449,8 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
 
     public getOutputs(): IOutputs {
         return {
-            hiddenField: JSON.stringify(this._selectedItems)
+            hiddenField: JSON.stringify(this._selectedItems),
+            recordNamesField: this._namesFieldValue // New NamesField
         };
     }
 

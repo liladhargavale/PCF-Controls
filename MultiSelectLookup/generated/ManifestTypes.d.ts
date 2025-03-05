@@ -6,7 +6,9 @@
 export interface IInputs {
     selectedItems: ComponentFramework.PropertyTypes.LookupProperty;
     hiddenField: ComponentFramework.PropertyTypes.StringProperty;
+    recordNamesField: ComponentFramework.PropertyTypes.StringProperty;
     LookupEntityLogicalName: ComponentFramework.PropertyTypes.StringProperty;
+    LookupEntityDisplayName: ComponentFramework.PropertyTypes.StringProperty;
     NameFieldLogicalName: ComponentFramework.PropertyTypes.StringProperty;
     LookupOption1LogicalName: ComponentFramework.PropertyTypes.StringProperty;
     LookupOption2LogicalName: ComponentFramework.PropertyTypes.StringProperty;
@@ -14,4 +16,5 @@ export interface IInputs {
 export interface IOutputs {
     selectedItems?: ComponentFramework.LookupValue[];
     hiddenField?: string;
+    recordNamesField?: string;
 }
