@@ -33,28 +33,42 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
         state: ComponentFramework.Dictionary,
         container: HTMLDivElement
     ): void {
-        // Existing initialization code
         this._container = container;
         this._notifyOutputChanged = notifyOutputChanged;
         this._lookupEntityDisplayName = context.parameters.LookupEntityDisplayName.raw || "Record";
         this._lookupEntityLogicalName = context.parameters.LookupEntityLogicalName.raw || "";
         this._nameFieldLogicalName = context.parameters.NameFieldLogicalName.raw || "";
-        
-        // Initialize selected items
-        const hiddenFieldValues = JSON.parse(context.parameters.hiddenField.raw || "[]");
-        this._selectedItems = hiddenFieldValues;
-        this.updateNamesField();
+
+        // 🔑 Fixed 1: Separate hidden field parsing logic
+        this.parseHiddenField(context);
 
         // Optional fields
         this.subTextField1 = context.parameters.LookupOption1LogicalName?.raw || "";
         this.subTextField2 = context.parameters.LookupOption2LogicalName?.raw || "";
 
-        // Create main UI elements
-        this.createMainField();        
-        // Load data and initialize
-        this.loadItems(context);
+        // Create UI first to show selected items immediately
+        this.createMainField();
         this.injectCSS();
+        
+        // 🔑 Fixed 2: Initial UI update before data load
         this.updateView();
+
+        // Load async data after UI setup
+        this.loadItems(context);
+    }
+
+    // 🔑 Fixed 3: Dedicated method for hidden field parsing
+    private parseHiddenField(context: ComponentFramework.Context<IInputs>): void {
+        try {
+            const hiddenFieldRaw = context.parameters.hiddenField.raw;
+            this._selectedItems = hiddenFieldRaw ? 
+                JSON.parse(hiddenFieldRaw) : 
+                [];
+        } catch (error) {
+            console.error("Error parsing hiddenField:", error);
+            this._selectedItems = [];
+        }
+        this.updateNamesField();
     }
 
     private createMainField(): void {
@@ -142,20 +156,20 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
     }
 
     // Example method to add a new item (for reference)
-    private addItem(item: ComponentFramework.LookupValue): void {
-        if (!this._selectedItems.some(i => i.id === item.id)) {
-            this._selectedItems.push(item);
-            this.updateNamesField(); // Update NamesField when item is added
-            this._notifyOutputChanged();
-        }
-    }
+    // private addItem(item: ComponentFramework.LookupValue): void {
+    //     if (!this._selectedItems.some(i => i.id === item.id)) {
+    //         this._selectedItems.push(item);
+    //         this.updateNamesField(); // Update NamesField when item is added
+    //         //this._notifyOutputChanged();
+    //     }
+    // }
 
-    // Example method to remove an item (for reference)
-    private removeItem(item: ComponentFramework.LookupValue): void {
-        this._selectedItems = this._selectedItems.filter(i => i.id !== item.id);
-        this.updateNamesField(); // Update NamesField when item is removed
-        this._notifyOutputChanged();
-    }
+    // // Example method to remove an item (for reference)
+    // private removeItem(item: ComponentFramework.LookupValue): void {
+    //     this._selectedItems = this._selectedItems.filter(i => i.id !== item.id);
+    //     this.updateNamesField(); // Update NamesField when item is removed
+    //     //this._notifyOutputChanged();
+    // }
 
     private openNewForm(): void {
         const formOptions = {
@@ -195,6 +209,9 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
     
                 if (!this._selectedItems.some(item => item.id === lookupValue.id)) {
                     this._selectedItems.push(lookupValue);
+
+                    //this.addItem(lookupValue);
+                    this.updateNamesField();
                     this._notifyOutputChanged();
                     // Refresh dropdown data to include the new record
                     this.retrieveData(this._lookupEntityLogicalName, this._nameFieldLogicalName); 
@@ -313,9 +330,15 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
                     }
                 }, 100); // Slight delay to ensure DOM update
             }
+
+            //this.addItem(item);
         } else {
             this._selectedItems = this._selectedItems.filter(i => i.id !== item.id);
+
+            //this.removeItem(item);
         }
+
+        this.updateNamesField();
         this._notifyOutputChanged();
         this.updateView();
     }
@@ -356,44 +379,37 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
     }
 
     public updateView(context?: ComponentFramework.Context<IInputs>): void {
-        // Clear existing selected items
-        this._selectedItemsContainer.innerHTML = '';
+        // 🔑 Fixed 4: Check for context updates
+        if(context && context.parameters.hiddenField.raw !== JSON.stringify(this._selectedItems)) {
+            this.parseHiddenField(context);
+        }
 
-        // Sort selected items alphabetically by name
+        // Existing rendering logic
+        this._selectedItemsContainer.innerHTML = '';
         this._selectedItems.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
         this._selectedItems.forEach(item => {
             const selectedItemDiv = document.createElement('div');
             selectedItemDiv.className = 'selected-item';
-            selectedItemDiv.id = `selected-${item.id}`; // Assign an ID for scrollIntoView
+            selectedItemDiv.id = `selected-${item.id}`;
 
-            // Create a link element for each selected item
             const selectedItemLink = document.createElement('a');
             selectedItemLink.className = 'selected-item-link';
             selectedItemLink.textContent = item.name || '';
-            selectedItemLink.href = 'javascript:void(0);'; // Prevent default link behavior
-
-            // Add click event to open the record
-            selectedItemLink.addEventListener('click', () => {
-                this.openRecord(item);
-            });
+            selectedItemLink.href = 'javascript:void(0);';
+            selectedItemLink.addEventListener('click', () => this.openRecord(item));
 
             const crossIcon = document.createElement('span');
             crossIcon.className = 'cross-icon';
             crossIcon.innerHTML = '&#10006;';
-
-            crossIcon.addEventListener('click', () => {
-                this.deselectItem(item);
-            });
+            crossIcon.addEventListener('click', () => this.deselectItem(item));
 
             selectedItemDiv.appendChild(selectedItemLink);
             selectedItemDiv.appendChild(crossIcon);
             this._selectedItemsContainer.appendChild(selectedItemDiv);
         });
 
-        // Append the search input container and dropdown to the main field
-        // Ensure selected items are displayed before search and dropdown
-        // Remove any existing search and dropdown to prevent duplication
+        // Maintain UI elements
         if (!this._mainField.contains(this._searchInputContainer)) {
             this._mainField.appendChild(this._searchInputContainer);
         }
@@ -424,12 +440,12 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
         const index = this._selectedItems.findIndex(i => i.id === item.id);
         if (index !== -1) {
             this._selectedItems.splice(index, 1);
-            this.removeItem(item); // Remove item when cross icon is clicked
-            const checkbox = this._dropdownContainer.querySelector(`#checkbox-${item.id}`) as HTMLInputElement;
-            if (checkbox) {
-                checkbox.checked = false;
-            }
-
+            //this.removeItem(item); // Remove item when cross icon is clicked
+            // const checkbox = this._dropdownContainer.querySelector(`#checkbox-${item.id}`) as HTMLInputElement;
+            // if (checkbox) {
+            //     checkbox.checked = false;
+            // }
+            this.updateNamesField();
             this._notifyOutputChanged();
             this.updateView();
 
@@ -448,9 +464,16 @@ export class LookupMultiSelect implements ComponentFramework.StandardControl<IIn
     }
 
     public getOutputs(): IOutputs {
+        // return {
+        //     hiddenField: JSON.stringify(this._selectedItems),
+        //     recordNamesField: this._namesFieldValue // New NamesField
+            
+        // };
         return {
-            hiddenField: JSON.stringify(this._selectedItems),
-            recordNamesField: this._namesFieldValue // New NamesField
+            hiddenField: this._selectedItems.length > 0 ? 
+                JSON.stringify(this._selectedItems) : 
+                "", // 🔑 Fixed 5: Return empty string instead of empty array
+            recordNamesField: this._namesFieldValue
         };
     }
 

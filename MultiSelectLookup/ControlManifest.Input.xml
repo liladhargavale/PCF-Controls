@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="LookupMultiSelect" constructor="LookupMultiSelect" version="9.5.7" display-name-key="LookupMultiSelect_Control" description-key="LookupMultiSelect_Description" control-type="standard">
+  <control namespace="LookupMultiSelect" constructor="LookupMultiSelect" version="9.6.0" display-name-key="LookupMultiSelect_Control" description-key="LookupMultiSelect_Description" control-type="standard">
     <external-service-usage enabled="false"></external-service-usage>
       <property name="selectedItems" display-name-key="selectedItems" description-key="selectedItemsDescription" of-type="Lookup.Simple" required="true" usage="bound">
       </property>
