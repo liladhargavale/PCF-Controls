@@ -1,5 +1,9 @@
 # 📢 LookupMultiSelect PCF Control
 
+## Link
+Hit this url in your browser and you can directly download ( for more guide go to 'Installation and Setup' )
+https://github.com/liladhargavale/PCF-Controls/blob/main/MultiSelectLookup/LookupMultiSelectSolution/bin/Debug/LookupMultiSelectSolution.zip
+
 ## 📘 Introduction  
 The **LookupMultiSelect PCF Control** is a powerful enhancement for **Microsoft Dynamics 365 (D365)** that allows users to select multiple records from lookup fields. This control significantly improves **user experience**, **data management**, and **efficiency** by enabling users to select multiple related records (like multiple contacts for an account) in one go. It also supports **Multiple Lines of Text** fields for displaying additional information and provides a **quick record creation** button for seamless data entry.
 
@@ -38,7 +42,13 @@ To get started with the **LookupMultiSelect PCF Control**, follow these steps:
 ### ** [1] Download from PCF Gallery**  
 1. Visit the [PCF Gallery](https://pcf.gallery/).  
 2. Search for **LookupMultiSelect**.  
-3. Download the **LookupMultiSelectSolution.zip** file.  
+3. Download the **LookupMultiSelectSolution.zip** file.
+
+   OR 
+
+you can directly hit this url:- 'https://github.com/liladhargavale/PCF-Controls/blob/main/MultiSelectLookup/LookupMultiSelectSolution/bin/Debug/LookupMultiSelectSolution.zip' 
+
+then click on three dots and click on download ( Hit URL --> Three dot --> Download)
 
 ---
 
