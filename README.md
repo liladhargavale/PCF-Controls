@@ -1,3 +1,6 @@
+#Download Location URL
+https://github.com/liladhargavale/PCF-Controls/blob/main/MultiSelectLookup/LookupMultiSelectSolution/bin/Debug/LookupMultiSelectSolution.zip
+
 # 📢 LookupMultiSelect PCF Control
 
 ## 📘 Introduction  
@@ -38,7 +41,11 @@ To get started with the **LookupMultiSelect PCF Control**, follow these steps:
 ### ** [1] Download from PCF Gallery**  
 1. Visit the [PCF Gallery](https://pcf.gallery/).  
 2. Search for **LookupMultiSelect**.  
-3. Download the **LookupMultiSelectSolution.zip** file.  
+3. Download the **LookupMultiSelectSolution.zip** file.
+
+Or 
+Just hit below url --> click on three dot's and click on download zip file.
+https://github.com/liladhargavale/PCF-Controls/blob/main/MultiSelectLookup/LookupMultiSelectSolution/bin/Debug/LookupMultiSelectSolution.zip
 
 ---
 
