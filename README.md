@@ -1,3 +1,13 @@
+# Download Control
+
+## URL:
+** https://github.com/liladhargavale/PCF-Controls/blob/main/MultiSelectLookup/LookupMultiSelectSolution/bin/Debug/LookupMultiSelectSolution.zip **
+
+Hit this url and clicked on three dot's and then click on download zip file.
+
+HIT URL --> THREE DOT'S --> DOWNLOAD ZIP
+
+
 # 📢 LookupMultiSelect PCF Control
 
 ## 📘 Introduction  
